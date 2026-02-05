@@ -8,7 +8,7 @@ public class  Main {
 
     // разбор строки
     static short ParseStr(String str) {
-       final short max_double = 17; // максимальная точность double
+       final short max_double = 4; // максимальная точность double
        final short a_minus = 45;  // "-"
        final short a_point = 46;  // "."
        final short a_0 = 48;      // "0"
@@ -34,7 +34,7 @@ public class  Main {
            if (a >= a_0 && a <= a_9) { // встречен символы 0..9
                f_digit = 1;
                if (f_point == 1) f_count_p++;
-               //               if (f_count_p > max_double) break; // максимальная точность double
+               if (f_count_p > max_double) break; // максимальная точность double
                continue;
            }
            else if (a == a_point){
@@ -54,13 +54,12 @@ public class  Main {
              if (f_count_p >0)
                  ret = 2;
            }
-
        }
        return ret;
     }
 
     public static void main(String[] args) {
-          String test="-1008.";
+          String test="-1008.96";
           short res;
           res = ParseStr(test);
           System.out.printf("\nres="+res);
