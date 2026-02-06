@@ -1,10 +1,17 @@
-import com.sun.org.apache.xpath.internal.objects.XString;
+/*
+  Считаем, что максимальная длина строки 255 символов,
+  все что больше будет отбрасываться без предупреждения
+  если в конце цифр встретились не цифровые символы - это строка
+  Читать из файла посимвольно (если будет огромная строка, можно игнорить остаток)
+*/
 
 public class  Main {
 
+    /*
     static void  WorkOption (String param) {
         System.out.println("Обработка параметра "  + param);
     }
+    */
 
     // разбор строки
     static short ParseStr(String str) {
@@ -13,6 +20,7 @@ public class  Main {
        final short r_double = 2;   // Double
        final short r_string = 3;   // String
 
+        // если не long b не double, то String
        short ret = r_string;
 
         // пробую Long
@@ -21,22 +29,19 @@ public class  Main {
             System.out.println("Int l = " + l);
             return(r_int);
         } catch (NumberFormatException nfe) {
+            null;
         }
 
         // пробую Double
         try {
-            Double d = Double.parseDouble(str);
+            double d = Double.parseDouble(str);
             System.out.println("double d = " + d);
             return(r_double);
         } catch (NumberFormatException nfe) {
             //System.out.println("NumberFormatException: " + nfe.getMessage());
         }
 
-        // если не long b не double, то String
         return ret;
-
-
-
     }
 
     public static void main(String[] args) {
@@ -57,14 +62,3 @@ public class  Main {
 */
     }
 }
-/*
-  Считаем, что максимальная длина строки 255 символов,
-  все что больше будет отбрасываться без предупреждения
-  если в конце цифр встретились не цифровые символы - это строка
-  Читать из файла посимвольно (если будет огромная строка, можно игнорить остаток)
-
-
-  Тип double в Java — это 64-битное число с плавающей запятой (стандарт IEEE 754),
-  обеспечивающее точность примерно 15–17 значимых десятичных цифр.
-  Диапазон значений составляет от \(4.9\times 10^{-324}\) до \(1.7976931348623157\times 10^{308}\)
-*/
