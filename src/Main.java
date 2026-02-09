@@ -4,25 +4,9 @@
   если в конце цифр встретились не цифровые символы - это строка
   Читать из файла посимвольно (если будет огромная строка, можно игнорить остаток)
 
-    ArrayList<String> arr = new ArrayList<String>();
-    arr.add("neo");
-    arr.add("morpheus");
-    arr.add("trinity");
-    Iterator<String> foreach = arr.iterator();
-    while (foreach.hasNext()) System.out.println(foreach.next())
 
 */
-/*
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-*/
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,30 +17,27 @@ import java.util.List;
 
 public class  Main {
 
-    public static List<String> readMyFile(String filename) throws IOException {
-
-        Path filePath = Paths.get(filename);
-        List<String> lines = new ArrayList<String>();
-        try {
-            // Read the entire file content into a String using the default UTF-8 charset
-            lines = Files.readAllLines(filePath);
-            System.out.println("File content:");
-            for (String s: lines) {
-                System.out.println(s);
-            }
-            return lines;
-        } catch (IOException e) {
-            // Handle I/O errors, such as file not found, permission issues, etc.
-            System.err.println("Ошибка при работе с файлом: " + e.getMessage());
-        }
-        return lines;
-    }
 
 
       static class Work {
         final static short r_int    = 1;   // Int
         final static short r_double = 2;   // Double
         final static short r_string = 3;   // String
+
+      public static List<String> readMyFile(String filename) throws IOException {
+
+          Path filePath = Paths.get(filename);
+          List<String> lines = new ArrayList<String>();
+          try {
+              lines = Files.readAllLines(filePath);
+          } catch (IOException e) {
+              // Handle I/O errors, such as file not found, permission issues, etc.
+              System.err.println("Ошибка при работе с исходым файлом: " + filename +
+                      "подробная информация" + e.getMessage());
+          } finally {
+              return lines;
+          }
+      } //readMyFile
 
         // разбор строки
         static short ParseStr(String str) {
@@ -79,32 +60,32 @@ public class  Main {
             } catch (NumberFormatException ignored) {}
 
             return ret;
-        }
-        //@Contract(pure = true)
-        static void WriteToFile(String str, int tp){
+        } // ParseStr
 
-        }
+//        static void WriteToFile(String str, int tp){
+//
+//        }
 
         static void Param(String param) {
               System.out.println("Обработка параметра "  + param);
         }
 
         static void  WorkFile (String param) {
-          String buf;  // буфер строк
+          List<String> lines = new ArrayList<String>();  // буфер строк
           System.out.println("\n Файл " + param);
           try {
-             List<String> lines =  readMyFile(param);
+             lines =  readMyFile(param);
           }
           catch(IOException e) {
+
               e.printStackTrace();
           }
 
-          System.out.println("buf: \n "  + param);
-           System.out.println("\n buf");
+          for ( String s : lines)
+              System.out.println(s);
+        } // WorkFile
 
-        }
-    }
-
+    } // Work
 
     public static void main(String[] args) {
         String test="-1008.0E2";
@@ -114,13 +95,11 @@ public class  Main {
 
         System.out.printf("Hello SHIFT!\n");
 
-        for (int i = 0; i < args.length; i++) {
-            String s;
-            if (args[i].indexOf("-") == 0)
-                Work.Param(args[i]);
+        for (String s : args) {
+            if (s.indexOf("-") == 0)
+                Work.Param(s);
             else
-                Work.WorkFile(args[i]);
-        }
-
+                Work.WorkFile(s);
+        } // s
     }
 }
