@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +22,10 @@ public class  Main {
 
 
       static class Work {
-        final static short r_int    = 1;   // Int
+        final static short r_long    = 1;   // Int
         final static short r_double = 2;   // Double
         final static short r_string = 3;   // String
+        //StandardCharsets utf8 = StandardCharsets.UTF_8;
 
       public static List<String> readMyFile(String filename) throws IOException {
 
@@ -34,22 +37,18 @@ public class  Main {
               // Handle I/O errors, such as file not found, permission issues, etc.
               System.err.println("Ошибка при работе с исходым файлом: " + filename +
                       "подробная информация" + e.getMessage());
-          } finally {
-              return lines;
           }
+          return lines;
       } //readMyFile
 
         // разбор строки
         static short ParseStr(String str) {
 
-            // если не long b не double, то String
-            short ret = r_string;
-
             // пробую Long
             try {
                 long l = Long.parseLong(str);
                 //System.out.println("Int l = " + l);
-                return(r_int);
+                return(r_long);
             } catch (NumberFormatException ignored) {}
 
             // пробую Double
@@ -59,7 +58,9 @@ public class  Main {
                 return(r_double);
             } catch (NumberFormatException ignored) {}
 
-            return ret;
+            // если не long b не double, то String
+            return r_string;
+
         } // ParseStr
 
 //        static void WriteToFile(String str, int tp){
@@ -70,28 +71,50 @@ public class  Main {
               System.out.println("Обработка параметра "  + param);
         }
 
-        static void  WorkFile (String param) {
-          List<String> lines = new ArrayList<String>();  // буфер строк
-          System.out.println("\n Файл " + param);
-          try {
-             lines =  readMyFile(param);
-          }
-          catch(IOException e) {
+       static void  WorkFile (String param) {
+         String userDirectory = Paths.get("").toAbsolutePath().toString();
+            //   System.out.println ("Current directory : " + userDirectory);
+         Path filePath  = Paths.get(userDirectory, "long.res");
 
-              e.printStackTrace();
-          }
+         List<String> lines = new ArrayList<String>();  // буфер строк
+         System.out.println("\n Обработка файла " + param);
 
-          for ( String s : lines)
-              System.out.println(s);
-        } // WorkFile
+
+         try {
+            lines =  readMyFile(param);
+         }
+         catch(IOException e) {
+             e.printStackTrace();
+         }
+
+          for ( String s : lines) {
+
+            System.out.print(s);
+            switch (ParseStr(s)) {
+              case r_long:
+                  System.out.print("  - long \n");
+                  try {
+                      // Write content to file
+                      byte[] cs =   (s+"\r\n").getBytes();
+                      Files.write(filePath, cs, StandardOpenOption.APPEND);
+                  }
+                  catch (IOException e) {
+                      e.printStackTrace();
+                  }
+                  break;
+                case r_double:
+                  System.out.print("  - double \n");
+                  break;
+                case r_string:
+                  System.out.print("  - String \n");
+                  break;
+            }
+          }
+       } // WorkFile
 
     } // Work
 
     public static void main(String[] args) {
-        String test="-1008.0E2";
-        short res;
-        res = Work.ParseStr(test);
-        System.out.printf("res="+res);
 
         System.out.printf("Hello SHIFT!\n");
 
