@@ -12,7 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+//import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,12 +75,34 @@ public class  Main {
        static void  WorkFile (String param) {
          String userDirectory = Paths.get("").toAbsolutePath().toString();
             //   System.out.println ("Current directory : " + userDirectory);
-         Path filePath  = Paths.get(userDirectory, "long.res");
+
 
          List<String> lines = new ArrayList<String>();  // буфер строк
+
          System.out.println("\n Обработка файла " + param);
 
+         Path filePathLong    = Paths.get(userDirectory, "long.res");
+         Path filePathDouble  = Paths.get(userDirectory, "double.res");
+         Path filePathString = Paths.get(userDirectory, "String.res");
 
+         ByteArrayOutputStream byteLongStream = new ByteArrayOutputStream();
+         ByteArrayOutputStream byteDoubleStream = new ByteArrayOutputStream();
+         ByteArrayOutputStream byteStringStream = new ByteArrayOutputStream();
+
+         // удалить файл  для Long
+         try {
+             boolean deleteLong = Files.deleteIfExists(filePathLong);
+         }
+         catch (IOException e) {
+             System.err.println(" Не могу удалить файл" + filePathLong + "\n");
+         }
+         try {
+           // создать файл  для Long
+              Files.createFile(filePathLong);
+         }
+         catch (IOException e) {
+             System.err.println(" Не могу создать пустой файл" + filePathLong + "\n");
+         }
          try {
             lines =  readMyFile(param);
          }
@@ -87,16 +110,55 @@ public class  Main {
              e.printStackTrace();
          }
 
-          for ( String s : lines) {
+           // удалить файл  для Double
+           try {
+               boolean deleteLong = Files.deleteIfExists(filePathDouble);
+           }
+           catch (IOException e) {
+               System.err.println(" Не могу удалить файл" + filePathDouble + "\n");
+           }
+           try {
+               // создать файл  для Long
+               Files.createFile(filePathDouble);
+           }
+           catch (IOException e) {
+               System.err.println(" Не могу создать пустой файл" + filePathDouble + "\n");
+           }
 
+           // удалить файл  для String
+           try {
+               boolean deleteLong = Files.deleteIfExists(filePathString);
+           }
+           catch (IOException e) {
+               System.err.println(" Не могу удалить файл" + filePathString + "\n");
+           }
+           try {
+               // создать файл  для Long
+               Files.createFile(filePathString);
+           }
+           catch (IOException e) {
+               System.err.println(" Не могу создать пустой файл" + filePathString + "\n");
+           }
+
+           try {
+               lines =  readMyFile(param);
+           }
+           catch(IOException e) {
+               e.printStackTrace();
+           }
+
+           for ( String s : lines) {
+
+            // buffer  for write file
+            byte[] cs =   ( s + "\r\n").getBytes();
             System.out.print(s);
+            // Write content to file
             switch (ParseStr(s)) {
               case r_long:
                   System.out.print("  - long \n");
                   try {
-                      // Write content to file
-                      byte[] cs =   (s+"\r\n").getBytes();
-                      Files.write(filePath, cs, StandardOpenOption.APPEND);
+
+                      byteLongStream.write(cs);
                   }
                   catch (IOException e) {
                       e.printStackTrace();
@@ -104,12 +166,49 @@ public class  Main {
                   break;
                 case r_double:
                   System.out.print("  - double \n");
+                  try {
+                      byteDoubleStream.write(cs);
+                  }
+                  catch (IOException e) {
+                      e.printStackTrace();
+                  }
                   break;
                 case r_string:
                   System.out.print("  - String \n");
+                  try {
+                      byteStringStream.write(cs);
+                  }
+                  catch (IOException e) {
+                      e.printStackTrace();
+                  }
                   break;
             }
           }
+
+         byte[] tmpLong = byteLongStream.toByteArray();
+         byte[] tmpDouble = byteDoubleStream.toByteArray();
+         byte[] tmpString = byteStringStream.toByteArray();
+
+         // запись в целевые файлы
+         try{
+           Files.write(filePathLong, tmpLong, StandardOpenOption.APPEND);
+         }
+         catch (IOException e) {
+           System.err.println(" Не могу записать в файл " + filePathLong + "\n");
+         }
+         try{
+           Files.write(filePathDouble, tmpDouble, StandardOpenOption.APPEND);
+         }
+         catch (IOException e) {
+           System.err.println(" Не могу записать в файл " + filePathDouble + "\n");
+         }
+           try{
+               Files.write(filePathString, tmpString, StandardOpenOption.APPEND);
+           }
+           catch (IOException e) {
+               System.err.println(" Не могу записать в файл " + filePathString + "\n");
+           }
+
        } // WorkFile
 
     } // Work
