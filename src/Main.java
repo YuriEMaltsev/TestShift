@@ -72,14 +72,15 @@ public class  Main {
               System.out.println("Обработка параметра "  + param);
         }
 
-       static void  WorkFile (String param) {
+       static void  WorkFile (String fileName) {
+
+         // в данном релизе пишу  в текущую директорию
          String userDirectory = Paths.get("").toAbsolutePath().toString();
             //   System.out.println ("Current directory : " + userDirectory);
 
-
          List<String> lines = new ArrayList<String>();  // буфер строк
 
-         System.out.println("\n Обработка файла " + param);
+         System.out.println("\n Обработка файла " + fileName);
 
          Path filePathLong    = Paths.get(userDirectory, "long.res");
          Path filePathDouble  = Paths.get(userDirectory, "double.res");
@@ -103,10 +104,12 @@ public class  Main {
          catch (IOException e) {
              System.err.println(" Не могу создать пустой файл" + filePathLong + "\n");
          }
+
          try {
-            lines =  readMyFile(param);
+            lines =  readMyFile(fileName);
          }
          catch(IOException e) {
+             System.err.println(" Не могу прочитать исходный файл" + fileName + "\n");
              e.printStackTrace();
          }
 
@@ -141,7 +144,7 @@ public class  Main {
            }
 
            try {
-               lines =  readMyFile(param);
+               lines =  readMyFile(fileName);
            }
            catch(IOException e) {
                e.printStackTrace();
