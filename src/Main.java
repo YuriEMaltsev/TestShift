@@ -42,14 +42,30 @@ public class  Main {
          // целевая директория
         static String destDirectory;
 
+        // добавлять в целевые файлы
         static boolean fAppendDescFile = true;
+
+        // полный формат отчета
+        static boolean fFullRep = false;
 
         static int countAll = 0;
         static int countLong = 0;
         static int countDouble = 0;
         static int countString;
 
-        public static List<String> readSourceFile(String filename) throws IOException {
+        static long  minLong = Long.MAX_VALUE;
+        static long  maxLong = Long.MIN_VALUE;
+        static long  sumLong = 0;
+
+        static double  minDouble = Double.MAX_VALUE;
+        static double  maxDouble = Double.MIN_VALUE;
+        static double  sumDouble = 0;
+
+        static int  minString = 2147483647;
+        static int  maxString = 0;
+
+
+          public static List<String> readSourceFile(String filename) throws IOException {
 
           Path filePath = Paths.get(filename);
           List<String> lines = new ArrayList<String>();
@@ -69,18 +85,34 @@ public class  Main {
             // пробую Long
             try {
                 long l = Long.parseLong(str);
-                //System.out.println("Int l = " + l);
+                sumLong += l;
+                if (minLong >= l)
+                       minLong = l;
+                if (maxLong <= l)
+                    maxLong = l;
+                countLong++;
                 return(r_long);
             } catch (NumberFormatException ignored) {}
 
             // пробую Double
             try {
                 double d = Double.parseDouble(str);
-                //System.out.println("double d = " + d);
+                countDouble++;
+                sumDouble += d;
+                if (minDouble >= d)
+                    minDouble = d;
+                if (maxDouble <= d)
+                    maxDouble = d;
                 return(r_double);
             } catch (NumberFormatException ignored) {}
 
             // если не long b не double, то String
+            int len = str.length();
+            if (minString >= len)
+                minString = len;
+            if (maxString <= len)
+                maxString = len;
+            countString++;
             return r_string;
 
         } // ParseStr
@@ -132,8 +164,6 @@ public class  Main {
               catch (IOException e) {
                   System.err.println(" Не могу создать пустой файл" + filePathString + "\n");
               }
-
-
           } //  DescFilesReset
 
           // создать целевые файлы, если указана опция -a
@@ -162,10 +192,9 @@ public class  Main {
 
           } //  CreateIfAppend
 
-
-
         static void Param(String param) {
 
+              //  целевая директория
               if (param.charAt(1)== 'o') {
                   destDirectory  = new String(param.substring(2));
               }
@@ -174,17 +203,21 @@ public class  Main {
               if (param.charAt(1)== 'a')
                 fAppendDescFile = false;
 
+            // дописывать в существующие файлы
+            if (param.charAt(1)== 'f')
+                fFullRep = true;
+
             if (param.charAt(1)== 'p') {
                 filePrefix  = new String(param.substring(2) + "_");
             }
 
-        }
+        } // Param
 
         static void  WorkFile (String fileName) {
 
            List<String> lines = new ArrayList<String>();  // буфер строк
 
-           System.out.println("\n Обработка файла " + fileName);
+           System.out.println("Обработка файла " + fileName);
 
            try {
                lines =  readSourceFile(fileName);
@@ -194,8 +227,7 @@ public class  Main {
                e.printStackTrace();
            }
 
-
-          // Названия буферов
+          // String buffers
           ByteArrayOutputStream byteLongStream = new ByteArrayOutputStream();
           ByteArrayOutputStream byteDoubleStream = new ByteArrayOutputStream();
           ByteArrayOutputStream byteStringStream = new ByteArrayOutputStream();
@@ -205,21 +237,17 @@ public class  Main {
               lines =  readSourceFile(fileName);
           }
           catch(IOException e) {
-
               e.printStackTrace();
           }
 
           for ( String s : lines) {
-
            // buffer  for write file
            byte[] cs =   ( s + "\r\n").getBytes();
-           System.out.print(s);
+
            // Write content to file
            switch (ParseStr(s)) {
              case r_long:
-                 System.out.print("  - long \n");
                  try {
-
                      byteLongStream.write(cs);
                  }
                  catch (IOException e) {
@@ -227,7 +255,6 @@ public class  Main {
                  }
                  break;
                case r_double:
-                 System.out.print("  - double \n");
                  try {
                      byteDoubleStream.write(cs);
                  }
@@ -236,7 +263,6 @@ public class  Main {
                  }
                  break;
                case r_string:
-                 System.out.print("  - String \n");
                  try {
                      byteStringStream.write(cs);
                  }
@@ -246,7 +272,8 @@ public class  Main {
                  break;
            }
          }
-
+         // запись в файлы
+         // todo реализовать потоковое чтение, что позволит обработать файл любой длины. Deadline...
          byte[] tmpLong = byteLongStream.toByteArray();
          byte[] tmpDouble = byteDoubleStream.toByteArray();
          byte[] tmpString = byteStringStream.toByteArray();
@@ -292,8 +319,22 @@ public class  Main {
            else
                CreateIfAppend();
 
-
        } //ini
+
+      //  Report work
+      static void Rep() {
+          System.out.println("\n Результат работы: \n");
+
+          System.out.println(" Результат: Строк Integer : " + countLong);
+          System.out.println(" Результат: Строк Float   : " + countDouble);
+          System.out.println(" Результат: Строк String  : " + countString);
+
+          if (fFullRep) {
+              System.out.println("\nInteger min = " + minLong + ",max = "+ maxLong + ",avg = " + sumLong/countLong);
+              System.out.println(  "Float min = " + minDouble + ",max = "+ maxDouble + ",avg = " +sumDouble/countDouble);
+              System.out.println(  "String minLen = " + minString + ",max = "+ maxString);
+          }
+      }
 
     } // Work
 
@@ -338,6 +379,9 @@ public class  Main {
                     if (args[i-1].charAt(0) != '-')
                         Work.WorkFile(s);
         }
+
+        Work.Rep();
+
 
     }
 }
