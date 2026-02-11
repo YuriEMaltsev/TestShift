@@ -20,15 +20,28 @@ import java.util.List;
 
 public class  Main {
 
-
-
       static class Work {
-        final static short r_long    = 1;   // Int
+
+        final static short r_long   = 1;   // Int
         final static short r_double = 2;   // Double
         final static short r_string = 3;   // String
-        //StandardCharsets utf8 = StandardCharsets.UTF_8;
 
-      public static List<String> readMyFile(String filename) throws IOException {
+        // пути до целевых файлов
+        static Path filePathLong  ;
+        static Path filePathDouble ;
+        static Path filePathString ;
+
+        // указание директории для целевых файлов
+        // static boolean is_param_desc_dir = false;
+        // целевая директория
+        static String destDirectory;
+
+        static int countAll = 0;
+        static int countLong = 0;
+        static int countDouble = 0;
+        static int countString;
+
+        public static List<String> readSourceFile(String filename) throws IOException {
 
           Path filePath = Paths.get(filename);
           List<String> lines = new ArrayList<String>();
@@ -40,7 +53,7 @@ public class  Main {
                       "подробная информация" + e.getMessage());
           }
           return lines;
-      } //readMyFile
+        } //readSourceFile
 
         // разбор строки
         static short ParseStr(String str) {
@@ -64,129 +77,135 @@ public class  Main {
 
         } // ParseStr
 
-//        static void WriteToFile(String str, int tp){
-//
-//        }
+          static void OutFilesReset(){
+
+              // удалить файл  для Long
+              try {
+                  boolean deleteLong = Files.deleteIfExists(filePathLong);
+              }
+              catch (IOException e) {
+                  System.err.println(" Не могу удалить файл" + filePathLong + "\n");
+              }
+              try {
+                  // создать файл  для Long
+                  Files.createFile(filePathLong);
+              }
+              catch (IOException e) {
+                  System.err.println(" Не могу создать пустой файл" + filePathLong + "\n");
+              }
+
+              // удалить файл  для Double
+              try {
+                  boolean deleteLong = Files.deleteIfExists(filePathDouble);
+              }
+              catch (IOException e) {
+                  System.err.println(" Не могу удалить файл" + filePathDouble + "\n");
+              }
+              try {
+                  // создать файл  для Long
+                  Files.createFile(filePathDouble);
+              }
+              catch (IOException e) {
+                  System.err.println(" Не могу создать пустой файл" + filePathDouble + "\n");
+              }
+
+              // удалить файл  для String
+              try {
+                  boolean deleteLong = Files.deleteIfExists(filePathString);
+              }
+              catch (IOException e) {
+                  System.err.println(" Не могу удалить файл" + filePathString + "\n");
+              }
+              try {
+                  // создать файл  для Long
+                  Files.createFile(filePathString);
+              }
+              catch (IOException e) {
+                  System.err.println(" Не могу создать пустой файл" + filePathString + "\n");
+              }
+
+          }
 
         static void Param(String param) {
-              System.out.println("Обработка параметра "  + param);
+
+              if (param.indexOf(2)== 'd') {
+                 System.out.println("Целевая Директория "  + param);
+                  destDirectory  = new String(param.substring(2));
+              }
+
         }
 
-       static void  WorkFile (String fileName) {
+        static void  WorkFile (String fileName) {
+            // if (is_first_file == true) {
+               // в данном релизе пишу  в текущую директорию
+           //    is_first_file = false;
+           //}
 
-         // в данном релизе пишу  в текущую директорию
-         String userDirectory = Paths.get("").toAbsolutePath().toString();
-            //   System.out.println ("Current directory : " + userDirectory);
 
-         List<String> lines = new ArrayList<String>();  // буфер строк
+           List<String> lines = new ArrayList<String>();  // буфер строк
 
-         System.out.println("\n Обработка файла " + fileName);
-
-         Path filePathLong    = Paths.get(userDirectory, "long.res");
-         Path filePathDouble  = Paths.get(userDirectory, "double.res");
-         Path filePathString = Paths.get(userDirectory, "String.res");
-
-         ByteArrayOutputStream byteLongStream = new ByteArrayOutputStream();
-         ByteArrayOutputStream byteDoubleStream = new ByteArrayOutputStream();
-         ByteArrayOutputStream byteStringStream = new ByteArrayOutputStream();
-
-         // удалить файл  для Long
-         try {
-             boolean deleteLong = Files.deleteIfExists(filePathLong);
-         }
-         catch (IOException e) {
-             System.err.println(" Не могу удалить файл" + filePathLong + "\n");
-         }
-         try {
-           // создать файл  для Long
-              Files.createFile(filePathLong);
-         }
-         catch (IOException e) {
-             System.err.println(" Не могу создать пустой файл" + filePathLong + "\n");
-         }
-
-         try {
-            lines =  readMyFile(fileName);
-         }
-         catch(IOException e) {
-             System.err.println(" Не могу прочитать исходный файл" + fileName + "\n");
-             e.printStackTrace();
-         }
-
-           // удалить файл  для Double
-           try {
-               boolean deleteLong = Files.deleteIfExists(filePathDouble);
-           }
-           catch (IOException e) {
-               System.err.println(" Не могу удалить файл" + filePathDouble + "\n");
-           }
-           try {
-               // создать файл  для Long
-               Files.createFile(filePathDouble);
-           }
-           catch (IOException e) {
-               System.err.println(" Не могу создать пустой файл" + filePathDouble + "\n");
-           }
-
-           // удалить файл  для String
-           try {
-               boolean deleteLong = Files.deleteIfExists(filePathString);
-           }
-           catch (IOException e) {
-               System.err.println(" Не могу удалить файл" + filePathString + "\n");
-           }
-           try {
-               // создать файл  для Long
-               Files.createFile(filePathString);
-           }
-           catch (IOException e) {
-               System.err.println(" Не могу создать пустой файл" + filePathString + "\n");
-           }
+           System.out.println("\n Обработка файла " + fileName);
 
            try {
-               lines =  readMyFile(fileName);
+               lines =  readSourceFile(fileName);
            }
            catch(IOException e) {
+               System.err.println(" Не могу прочитать исходный файл" + fileName + "\n");
                e.printStackTrace();
            }
 
-           for ( String s : lines) {
 
-            // buffer  for write file
-            byte[] cs =   ( s + "\r\n").getBytes();
-            System.out.print(s);
-            // Write content to file
-            switch (ParseStr(s)) {
-              case r_long:
-                  System.out.print("  - long \n");
-                  try {
+          // Названия буферов
+          ByteArrayOutputStream byteLongStream = new ByteArrayOutputStream();
+          ByteArrayOutputStream byteDoubleStream = new ByteArrayOutputStream();
+          ByteArrayOutputStream byteStringStream = new ByteArrayOutputStream();
 
-                      byteLongStream.write(cs);
-                  }
-                  catch (IOException e) {
-                      e.printStackTrace();
-                  }
-                  break;
-                case r_double:
-                  System.out.print("  - double \n");
-                  try {
-                      byteDoubleStream.write(cs);
-                  }
-                  catch (IOException e) {
-                      e.printStackTrace();
-                  }
-                  break;
-                case r_string:
-                  System.out.print("  - String \n");
-                  try {
-                      byteStringStream.write(cs);
-                  }
-                  catch (IOException e) {
-                      e.printStackTrace();
-                  }
-                  break;
-            }
+          // чтение исходного файла
+          try {
+              lines =  readSourceFile(fileName);
           }
+          catch(IOException e) {
+
+              e.printStackTrace();
+          }
+
+          for ( String s : lines) {
+
+           // buffer  for write file
+           byte[] cs =   ( s + "\r\n").getBytes();
+           System.out.print(s);
+           // Write content to file
+           switch (ParseStr(s)) {
+             case r_long:
+                 System.out.print("  - long \n");
+                 try {
+
+                     byteLongStream.write(cs);
+                 }
+                 catch (IOException e) {
+                     e.printStackTrace();
+                 }
+                 break;
+               case r_double:
+                 System.out.print("  - double \n");
+                 try {
+                     byteDoubleStream.write(cs);
+                 }
+                 catch (IOException e) {
+                     e.printStackTrace();
+                 }
+                 break;
+               case r_string:
+                 System.out.print("  - String \n");
+                 try {
+                     byteStringStream.write(cs);
+                 }
+                 catch (IOException e) {
+                     e.printStackTrace();
+                 }
+                 break;
+           }
+         }
 
          byte[] tmpLong = byteLongStream.toByteArray();
          byte[] tmpDouble = byteDoubleStream.toByteArray();
@@ -214,17 +233,40 @@ public class  Main {
 
        } // WorkFile
 
+       //
+       static void ini() {
+
+           // если целевая директория не указана как -dDestDirName
+           if (destDirectory == null)
+              destDirectory = Paths.get("").toAbsolutePath().toString();
+
+           // Пути до целевых файлов
+           filePathLong = Paths.get(destDirectory, "long.res");
+           filePathDouble = Paths.get(destDirectory, "double.res");
+           filePathString = Paths.get(destDirectory, "String.res");
+
+       } //ini
+
     } // Work
 
     public static void main(String[] args) {
 
-        System.out.printf("Hello SHIFT!\n");
+        System.out.println("Hello SHIFT!\n");
 
+        // чтение параметров
         for (String s : args) {
             if (s.indexOf("-") == 0)
                 Work.Param(s);
-            else
+        } // s
+
+        // инициализация
+        Work.ini();
+
+        // обработка файлов
+        for (String s : args) {
+            if (s.indexOf("-") != 0)
                 Work.WorkFile(s);
         } // s
+
     }
 }
