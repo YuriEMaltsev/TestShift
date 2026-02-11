@@ -26,15 +26,23 @@ public class  Main {
         final static short r_double = 2;   // Double
         final static short r_string = 3;   // String
 
+        // Имена целевых файлов по умолчанию
+        static String fNameLong   = "integers.txt";
+        static String fNameDouble = "floats.txt";
+        static String fNameString = "strings.txt";
+
+        // префикс для имен файлов
+        static String filePrefix;
+
         // пути до целевых файлов
         static Path filePathLong  ;
         static Path filePathDouble ;
         static Path filePathString ;
 
-        // указание директории для целевых файлов
-        // static boolean is_param_desc_dir = false;
-        // целевая директория
+         // целевая директория
         static String destDirectory;
+
+        static boolean fAppendDescFile = true;
 
         static int countAll = 0;
         static int countLong = 0;
@@ -77,7 +85,8 @@ public class  Main {
 
         } // ParseStr
 
-          static void OutFilesReset(){
+          // удаление и создание новых исходных файлов
+          static void DescFilesReset(){
 
               // удалить файл  для Long
               try {
@@ -124,23 +133,54 @@ public class  Main {
                   System.err.println(" Не могу создать пустой файл" + filePathString + "\n");
               }
 
-          }
+
+          } //  DescFilesReset
+
+          // создать целевые файлы, если указана опция -a
+          static void CreateIfAppend (){
+
+              try {
+                  // создать файл  для Long
+                  Files.createFile(filePathLong);
+              }
+              catch (IOException e) {
+              }
+
+              try {
+                  // создать файл  для Long
+                  Files.createFile(filePathDouble);
+              }
+              catch (IOException e) {
+              }
+
+              try {
+                  // создать файл  для Long
+                  Files.createFile(filePathString);
+              }
+              catch (IOException e) {
+              }
+
+          } //  CreateIfAppend
+
+
 
         static void Param(String param) {
 
-              if (param.indexOf(2)== 'd') {
-                 System.out.println("Целевая Директория "  + param);
+              if (param.charAt(1)== 'o') {
                   destDirectory  = new String(param.substring(2));
               }
+
+            // дописывать в существующие файлы
+              if (param.charAt(1)== 'a')
+                fAppendDescFile = false;
+
+            if (param.charAt(1)== 'p') {
+                filePrefix  = new String(param.substring(2) + "_");
+            }
 
         }
 
         static void  WorkFile (String fileName) {
-            // if (is_first_file == true) {
-               // в данном релизе пишу  в текущую директорию
-           //    is_first_file = false;
-           //}
-
 
            List<String> lines = new ArrayList<String>();  // буфер строк
 
@@ -210,40 +250,48 @@ public class  Main {
          byte[] tmpLong = byteLongStream.toByteArray();
          byte[] tmpDouble = byteDoubleStream.toByteArray();
          byte[] tmpString = byteStringStream.toByteArray();
+         String mes = ". \n Вероятно вы указали параметр -o c некоректной директорией. ";
 
          // запись в целевые файлы
          try{
            Files.write(filePathLong, tmpLong, StandardOpenOption.APPEND);
          }
          catch (IOException e) {
-           System.err.println(" Не могу записать в файл " + filePathLong + "\n");
+           System.err.println(" Не могу записать в файл " + filePathLong + mes +"\n");
          }
          try{
            Files.write(filePathDouble, tmpDouble, StandardOpenOption.APPEND);
          }
          catch (IOException e) {
-           System.err.println(" Не могу записать в файл " + filePathDouble + "\n");
+           System.err.println(" Не могу записать в файл " + filePathDouble + mes+ "\n");
          }
            try{
                Files.write(filePathString, tmpString, StandardOpenOption.APPEND);
            }
            catch (IOException e) {
-               System.err.println(" Не могу записать в файл " + filePathString + "\n");
+               System.err.println(" Не могу записать в файл " + filePathString + mes + "\n");
            }
 
        } // WorkFile
 
        //
-       static void ini() {
+       static void Ini() {
 
            // если целевая директория не указана как -dDestDirName
            if (destDirectory == null)
               destDirectory = Paths.get("").toAbsolutePath().toString();
 
            // Пути до целевых файлов
-           filePathLong = Paths.get(destDirectory, "long.res");
-           filePathDouble = Paths.get(destDirectory, "double.res");
-           filePathString = Paths.get(destDirectory, "String.res");
+           filePathLong = Paths.get(destDirectory, filePrefix+fNameLong);
+           filePathDouble = Paths.get(destDirectory, fNameDouble);
+           filePathString = Paths.get(destDirectory, fNameString);
+
+           // Создание или пересоздание  целевых файлов
+           if (fAppendDescFile)
+                DescFilesReset();
+           else
+               CreateIfAppend();
+
 
        } //ini
 
@@ -254,19 +302,42 @@ public class  Main {
         System.out.println("Hello SHIFT!\n");
 
         // чтение параметров
-        for (String s : args) {
-            if (s.indexOf("-") == 0)
+        for (int i = 0 ; i < args.length; i++) {
+            String s = args[i];
+            //if (s.indexOf("-") == 0) {
+            // найден префикс комментария
+            if (s.charAt(0) == '-') {
+               char c = s.charAt(1);
+               // он известен, как простой параметр из списка:
+               if (c == 'a' || c == 's' || c== 'f')
                 Work.Param(s);
-        } // s
+               else
+                   // он известен, как параметр с аргументом из списка:
+                   if  (c == 'p' || c == 'o')
+                      // параметр последний и пустойЙ
+                      if (i+1 < args.length)
+                       Work.Param("-" + c + args[i+1]);
+                      else
+                        System.out.println("Параметр -"+ c + " указан без аргумента" );
+                   else
+                       System.out.println("Параметр -"+ c + "не известен" );
+            }
+        }
 
         // инициализация
-        Work.ini();
+        Work.Ini();
 
         // обработка файлов
-        for (String s : args) {
-            if (s.indexOf("-") != 0)
-                Work.WorkFile(s);
-        } // s
+        for (int i = 0 ; i < args.length; i++) {
+            String s = args[i];
+            if (s.charAt(0) != '-')
+                if (i == 0)
+                    Work.WorkFile(s);
+                else
+                    // предыдущий аргумент не параметр?
+                    if (args[i-1].charAt(0) != '-')
+                        Work.WorkFile(s);
+        }
 
     }
 }
