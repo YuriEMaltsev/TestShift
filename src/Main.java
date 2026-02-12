@@ -1,25 +1,24 @@
+
 /*
+  Программа
+    Stream Parser
   Назначение
     Программа выборки из исходных файлов строк со строками,
     содержащие Long и Double
   Автор
     Юрий Мальцев
+  Дата релиза
+    11.02.2026
 
 */
 
-//import java.io.FileReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-//import java.nio.file.StandardOpenOption;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-//import java.nio.charset.StandardCharsets;
-
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -201,12 +200,12 @@ public class  Main {
             if (param.charAt(1)== 'f')
                 fFullRep = true;
 
-            // размер буфера потока чтения
+            // десятичный размер буфера потока чтения (умолчание 65535 байт)
             if (param.charAt(1)== 'b') {
                 String tS  = new String(param.substring(2));
                 BufSize =  Integer.parseInt(tS);
             }
-            // десятичный размер буфера потока чтения (умолчание 65535 байт)
+            // путь к целевой директории
             if (param.charAt(1)== 'p') {
                 filePrefix  = new String(param.substring(2) + "_");
             }
@@ -278,7 +277,7 @@ public class  Main {
                            // если строка большая, а в буфер не влезло - это нужно обработать
                            String tS = new String(byteRest, StandardCharsets.UTF_8) ;
                            String tS2 = resStr + tS;
-                           resStr = resStr+ tS2;
+                           resStr = resStr + tS2;
                        }
 
                     } // while read stream
@@ -406,13 +405,14 @@ public class  Main {
 
       //  Report work
       static void Rep() {
-/*
+
           System.out.println("\n Результат работы: \n");
 
           System.out.println(" Результат: Строк Integer : " + countLong);
           System.out.println(" Результат: Строк Float   : " + countDouble);
           System.out.println(" Результат: Строк String  : " + countString);
-*/
+
+          // полный отчет
           if (fFullRep) {
            if (countLong != 0)
                System.out.println("\nInteger min = " + minLong + ",max = "+ maxLong + ",avg = " + sumLong/countLong);
@@ -427,7 +427,7 @@ public class  Main {
 
     public static void main(String[] args) {
 
-        System.out.println("  Hello SHIFT!\n");
+        System.out.println("  Stream Parser !\n");
 
         // чтение параметров
         for (int i = 0 ; i < args.length; i++) {
@@ -463,6 +463,7 @@ public class  Main {
                 if (i == 0) //
                     Work.StreamReadFile(s);
                 else {
+                    // пробросить p и o
                     if (!(((args[i - 1].charAt(1) == 'p') || (args[i - 1].charAt(1) == 'o')) && (args[i - 1].charAt(0) == '-')))
                         Work.StreamReadFile(s);
                 }
