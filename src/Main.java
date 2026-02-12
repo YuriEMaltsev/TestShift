@@ -1,21 +1,27 @@
 /*
-  Считаем, что максимальная длина строки 255 символов,
-  все что больше будет отбрасываться без предупреждения
-  если в конце цифр встретились не цифровые символы - это строка
-  Читать из файла посимвольно (если будет огромная строка, можно игнорить остаток)
-
+  Назначение
+    Программа выборки из исходных файлов строк со строками,
+    содержащие Long и Double
+  Автор
+    Юрий Мальцев
 
 */
 
+//import java.io.FileReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+//import java.nio.file.StandardOpenOption;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 //import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class  Main {
@@ -48,7 +54,6 @@ public class  Main {
         // полный формат отчета
         static boolean fFullRep = false;
 
-        static int countAll = 0;
         static int countLong = 0;
         static int countDouble = 0;
         static int countString;
@@ -63,21 +68,6 @@ public class  Main {
 
         static int  minString = 2147483647;
         static int  maxString = 0;
-
-
-          public static List<String> readSourceFile(String filename) throws IOException {
-
-          Path filePath = Paths.get(filename);
-          List<String> lines = new ArrayList<String>();
-          try {
-              lines = Files.readAllLines(filePath);
-          } catch (IOException e) {
-              // Handle I/O errors, such as file not found, permission issues, etc.
-              System.err.println("Ошибка при работе с исходым файлом: " + filename +
-                      "подробная информация" + e.getMessage());
-          }
-          return lines;
-        } //readSourceFile
 
         // разбор строки
         static short ParseStr(String str) {
@@ -219,19 +209,82 @@ public class  Main {
 
            System.out.println("Обработка файла " + fileName);
 
-           try {
-               lines =  readSourceFile(fileName);
-           }
-           catch(IOException e) {
-               System.err.println(" Не могу прочитать исходный файл" + fileName + "\n");
-               e.printStackTrace();
-           }
-
           // String buffers
           ByteArrayOutputStream byteLongStream = new ByteArrayOutputStream();
           ByteArrayOutputStream byteDoubleStream = new ByteArrayOutputStream();
           ByteArrayOutputStream byteStringStream = new ByteArrayOutputStream();
 
+
+
+           // Потоковое чтение файла буферами
+           //
+           //int BufSize = 10;
+
+            try {
+                FileInputStream is = new FileInputStream(fileName);
+                byte[] buffer = new byte[10];
+                int lastPosString = 0; // последняя позиция найденной строки
+                //String breakString; //Оборванная строка
+
+                // StringBuffer restStr = new StringBuffer(); // оборванная строка
+                StringBuffer curStr = new StringBuffer(); // оборванная строка
+
+                try {
+                    while (is.available() > 0) {
+                        int count = is.read(buffer);
+                        System.out.println("Count = " + count );
+                        curStr.setLength(0);
+                        for (int i=0; i < count; i++) {
+                            if ( buffer[i] == 10 || buffer[i] == 13){
+                                    byte[] byteStr  = Arrays.copyOfRange(buffer, lastPosString, i);
+                                    String ls = new String(byteStr, StandardCharsets.UTF_8);
+                                    System.out.println("cur string = " + ls );
+                        } // for buffer
+//                            if (( buffer[i] == 13 || buffer[i] == 10) != true){
+
+//                            }
+
+                                //curStr = curStr.append((char)buffer[i]);
+
+/*
+byte[] newArray = Arrays.copyOf(sourceArray, sourceArray.length);
+
+// Example to print the new array
+System.out.println(Arrays.toString(newArray)); // Output: [1, 2, 3, 4, 5]
+ */
+
+                        }
+                        String str = new String(buffer);
+
+                    }
+                }
+                catch (IOException e) {
+                    System.out.println("Ошибка  чтения потока файла " + fileName );
+                }
+
+                try {
+                    is.close();
+                }
+                catch (IOException e) {
+                    System.out.println("Ошибка  закрыти потока файла " + fileName );
+                }
+
+            } catch (IOException e) {
+                // The catch block handles the specific exception
+                System.out.println("Ошибка открытия потока файла " + fileName + "\n" + e.getMessage());
+            }
+
+              //пока есть еще непрочитанные байты {
+            //while (is.available() > 0) {
+            //    // прочитать очередной блок байт в переменную buffer и реальное количество в count
+            //    int count = is.read(buffer);
+            //}
+            //aaa.read(buffer);
+
+            //is.close();
+
+
+   /*
           // чтение исходного файла
           try {
               lines =  readSourceFile(fileName);
@@ -240,11 +293,15 @@ public class  Main {
               e.printStackTrace();
           }
 
+
+
           for ( String s : lines) {
+
            // buffer  for write file
+           // добавляю перевод строки
            byte[] cs =   ( s + "\r\n").getBytes();
 
-           // Write content to file
+           // Записываю результат в разные файлы изходя из ParseStr(s)
            switch (ParseStr(s)) {
              case r_long:
                  try {
@@ -298,7 +355,7 @@ public class  Main {
            catch (IOException e) {
                System.err.println(" Не могу записать в файл " + filePathString + mes + "\n");
            }
-
+*/
        } // WorkFile
 
        //
@@ -323,16 +380,20 @@ public class  Main {
 
       //  Report work
       static void Rep() {
+/*
           System.out.println("\n Результат работы: \n");
 
           System.out.println(" Результат: Строк Integer : " + countLong);
           System.out.println(" Результат: Строк Float   : " + countDouble);
           System.out.println(" Результат: Строк String  : " + countString);
-
+*/
           if (fFullRep) {
-              System.out.println("\nInteger min = " + minLong + ",max = "+ maxLong + ",avg = " + sumLong/countLong);
-              System.out.println(  "Float min = " + minDouble + ",max = "+ maxDouble + ",avg = " +sumDouble/countDouble);
-              System.out.println(  "String minLen = " + minString + ",max = "+ maxString);
+           if (countLong != 0)
+               System.out.println("\nInteger min = " + minLong + ",max = "+ maxLong + ",avg = " + sumLong/countLong);
+           if (countDouble != 0)
+               System.out.println(  "Float min = " + minDouble + ",max = "+ maxDouble + ",avg = " +sumDouble/countDouble);
+           if (countString !=0 )
+               System.out.println(  "String minLen = " + minString + ",max = "+ maxString);
           }
       }
 
