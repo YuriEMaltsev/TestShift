@@ -70,6 +70,9 @@ public class  Main {
         static int  minString = 2147483647;
         static int  maxString = 0;
 
+        // размер буфера чтения
+        static int BufSize = 65535;
+
         // определение типа строки
         static short CheckTypeString(String str) {
 
@@ -185,7 +188,7 @@ public class  Main {
 
         static void Param(String param) {
 
-              //  целевая директория
+              //  целевая директория (умолчание текущая директория)
               if (param.charAt(1)== 'o') {
                   destDirectory  = new String(param.substring(2));
               }
@@ -194,10 +197,16 @@ public class  Main {
               if (param.charAt(1)== 'a')
                 fAppendDescFile = false;
 
-            // дописывать в существующие файлы
+            // полный формат отчета
             if (param.charAt(1)== 'f')
                 fFullRep = true;
 
+            // размер буфера потока чтения
+            if (param.charAt(1)== 'b') {
+                String tS  = new String(param.substring(2));
+                BufSize =  Integer.parseInt(tS);
+            }
+            // десятичный размер буфера потока чтения (умолчание 65535 байт)
             if (param.charAt(1)== 'p') {
                 filePrefix  = new String(param.substring(2) + "_");
             }
@@ -215,8 +224,6 @@ public class  Main {
 
            // Потоковое чтение файла
            //
-           // размер буфера чтения
-           final int BufSize = 10;
 
             try {
                 FileInputStream is = new FileInputStream(fileName);
@@ -420,7 +427,7 @@ public class  Main {
 
     public static void main(String[] args) {
 
-        System.out.println("Hello SHIFT!\n");
+        System.out.println("  Hello SHIFT!\n");
 
         // чтение параметров
         for (int i = 0 ; i < args.length; i++) {
@@ -454,13 +461,13 @@ public class  Main {
             if (s.charAt(0) != '-')
                 if (i == 0) //
                     Work.StreamReadFile(s);
-                else
-                    // предыдущий аргумент не параметр?
-                    if ((args[i].charAt(0) != '-') )
-                        if ((args[i-1].charAt(1) == 'a') || (args[i-1].charAt(1) == 's') || (args[i-1].charAt(1) == 'f'))
-                            Work.StreamReadFile(s);
+                else {
+                    if (  (args[i - 1].charAt(1) != 'p') && (args[i - 1].charAt(1) != 'o') )
+                        Work.StreamReadFile(s);
+                }
         }
 
+        // Отчет
         Work.Rep();
 
     }
