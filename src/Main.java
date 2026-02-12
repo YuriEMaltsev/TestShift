@@ -203,9 +203,11 @@ public class  Main {
 
         } // Param
 
-        static void  WorkFile (String fileName) {
+        static void  StreamReadFile (String fileName) {
 
            List<String> lines = new ArrayList<String>();  // буфер строк
+           String resStr = "";  // буфер переноса
+           boolean fCR_LF = false; // флаг CR и LF
 
            System.out.println("Обработка файла " + fileName);
 
@@ -214,44 +216,75 @@ public class  Main {
           ByteArrayOutputStream byteDoubleStream = new ByteArrayOutputStream();
           ByteArrayOutputStream byteStringStream = new ByteArrayOutputStream();
 
-
-
-           // Потоковое чтение файла буферами
+           // Потоковое чтение файла
            //
-           //int BufSize = 10;
+           // размер буфера чтения
+           final int BufSize = 10;
 
             try {
                 FileInputStream is = new FileInputStream(fileName);
-                byte[] buffer = new byte[10];
-
-                //String breakString; //Оборванная строка
-
-                // StringBuffer restStr = new StringBuffer(); // оборванная строка
-                StringBuffer curStr = new StringBuffer(); // оборванная строка
+                byte[] buffer = new byte[BufSize];
 
                 try {
+                    // читать поток в буфер
                     while (is.available() > 0) {
+
+                        // байт считано
                         int count = is.read(buffer);
-                        System.out.println("Count = " + count );
+                        //fRN = false;
+
+                        // System.out.println("Count = " + count );
+
                         int lastPosString = 0; // последняя позиция найденной строки
+
+                        // parse Strings
                         for (int i=0; i < count; i++) {
 
                             if ( buffer[i] == 10 || buffer[i] == 13) { // переводы строк
+
+                                fCR_LF = true;
+
                                 if (i != 0 && !(buffer[i - 1] == 10 || buffer[i - 1] == 13)) {
                                     byte[] byteStr = Arrays.copyOfRange(buffer, lastPosString, i);
-                                    String ls = new String(byteStr, StandardCharsets.UTF_8);
-                                    System.out.println("cur string = " + ls);
-                                }
+
+                                    String tS;  // текущий результат
+                                    String bufS = new String(byteStr, StandardCharsets.UTF_8); //  UTF8 строка
+
+                                    if (resStr.length() == 0)
+                                        tS = bufS;
+                                    else {
+                                        tS = resStr + bufS;  // учет буфера переноса
+                                        resStr = "";
+                                    }
+                                    System.out.println(tS);
+                                } else  // обработка символов
+
                                 if ((i < count-1) && !(buffer[i + 1] == 10 || buffer[i + 1] == 13)) {
+                                    fCR_LF = false;
                                     lastPosString = i+1;
-                               }
-                            }
+                                }
 
-                        }// for buffer
-                        String str = new String(buffer);
+                            } //
 
-                    }
-                }
+                        }  // for buf
+
+                       // Обработка недопарсеного буфера
+                       if ((lastPosString != count) && (fCR_LF == false)) {
+                           byte[] byteRest =  Arrays.copyOfRange(buffer, lastPosString, count);
+                           // если строка большая, а в буфер не влезло - это нужно обработать
+                           String tS = new String(byteRest, StandardCharsets.UTF_8) ;
+                           String tS2 = resStr + tS;
+                           resStr = resStr+ tS2;
+                       }
+
+                    } // while read stream
+
+                   // обработка остатка после чтения файла
+                   if (resStr.length() != 0)
+                     System.out.println(resStr);
+                   // todo не забыть остаток
+
+                } // try read stream
                 catch (IOException e) {
                     System.out.println("Ошибка  чтения потока файла " + fileName );
                 }
@@ -417,12 +450,13 @@ public class  Main {
         for (int i = 0 ; i < args.length; i++) {
             String s = args[i];
             if (s.charAt(0) != '-')
-                if (i == 0)
-                    Work.WorkFile(s);
+                if (i == 0) //
+                    Work.StreamReadFile(s);
                 else
                     // предыдущий аргумент не параметр?
-                    if (args[i-1].charAt(0) != '-')
-                        Work.WorkFile(s);
+                    if ((args[i].charAt(0) != '-') )
+                        if ((args[i-1].charAt(1) == 'a') || (args[i-1].charAt(1) == 's') || (args[i-1].charAt(1) == 'f'))
+                        Work.StreamReadFile(s);
         }
 
         Work.Rep();
