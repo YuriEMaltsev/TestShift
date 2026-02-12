@@ -458,11 +458,12 @@ public class  Main {
         // обработка файлов
         for (int i = 0 ; i < args.length; i++) {
             String s = args[i];
+
             if (s.charAt(0) != '-')
                 if (i == 0) //
                     Work.StreamReadFile(s);
                 else {
-                    if (  (args[i - 1].charAt(1) != 'p') && (args[i - 1].charAt(1) != 'o') )
+                    if (!(((args[i - 1].charAt(1) == 'p') || (args[i - 1].charAt(1) == 'o')) && (args[i - 1].charAt(0) == '-')))
                         Work.StreamReadFile(s);
                 }
         }
