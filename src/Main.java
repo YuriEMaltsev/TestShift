@@ -223,7 +223,7 @@ public class  Main {
             try {
                 FileInputStream is = new FileInputStream(fileName);
                 byte[] buffer = new byte[10];
-                int lastPosString = 0; // последняя позиция найденной строки
+
                 //String breakString; //Оборванная строка
 
                 // StringBuffer restStr = new StringBuffer(); // оборванная строка
@@ -233,27 +233,21 @@ public class  Main {
                     while (is.available() > 0) {
                         int count = is.read(buffer);
                         System.out.println("Count = " + count );
-                        curStr.setLength(0);
+                        int lastPosString = 0; // последняя позиция найденной строки
                         for (int i=0; i < count; i++) {
-                            if ( buffer[i] == 10 || buffer[i] == 13){
-                                    byte[] byteStr  = Arrays.copyOfRange(buffer, lastPosString, i);
+
+                            if ( buffer[i] == 10 || buffer[i] == 13) { // переводы строк
+                                if (i != 0 && !(buffer[i - 1] == 10 || buffer[i - 1] == 13)) {
+                                    byte[] byteStr = Arrays.copyOfRange(buffer, lastPosString, i);
                                     String ls = new String(byteStr, StandardCharsets.UTF_8);
-                                    System.out.println("cur string = " + ls );
-                        } // for buffer
-//                            if (( buffer[i] == 13 || buffer[i] == 10) != true){
+                                    System.out.println("cur string = " + ls);
+                                }
+                                if ((i < count-1) && !(buffer[i + 1] == 10 || buffer[i + 1] == 13)) {
+                                    lastPosString = i+1;
+                               }
+                            }
 
-//                            }
-
-                                //curStr = curStr.append((char)buffer[i]);
-
-/*
-byte[] newArray = Arrays.copyOf(sourceArray, sourceArray.length);
-
-// Example to print the new array
-System.out.println(Arrays.toString(newArray)); // Output: [1, 2, 3, 4, 5]
- */
-
-                        }
+                        }// for buffer
                         String str = new String(buffer);
 
                     }
@@ -273,16 +267,6 @@ System.out.println(Arrays.toString(newArray)); // Output: [1, 2, 3, 4, 5]
                 // The catch block handles the specific exception
                 System.out.println("Ошибка открытия потока файла " + fileName + "\n" + e.getMessage());
             }
-
-              //пока есть еще непрочитанные байты {
-            //while (is.available() > 0) {
-            //    // прочитать очередной блок байт в переменную buffer и реальное количество в count
-            //    int count = is.read(buffer);
-            //}
-            //aaa.read(buffer);
-
-            //is.close();
-
 
    /*
           // чтение исходного файла
