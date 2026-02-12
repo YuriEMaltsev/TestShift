@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 //import java.nio.charset.StandardCharsets;
 
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,8 +70,8 @@ public class  Main {
         static int  minString = 2147483647;
         static int  maxString = 0;
 
-        // разбор строки
-        static short ParseStr(String str) {
+        // определение типа строки
+        static short CheckTypeString(String str) {
 
             // пробую Long
             try {
@@ -206,15 +207,11 @@ public class  Main {
         static void  StreamReadFile (String fileName) {
 
            List<String> lines = new ArrayList<String>();  // буфер строк
+
            String resStr = "";  // буфер переноса
            boolean fCR_LF = false; // флаг CR и LF
 
            System.out.println("Обработка файла " + fileName);
-
-          // String buffers
-          ByteArrayOutputStream byteLongStream = new ByteArrayOutputStream();
-          ByteArrayOutputStream byteDoubleStream = new ByteArrayOutputStream();
-          ByteArrayOutputStream byteStringStream = new ByteArrayOutputStream();
 
            // Потоковое чтение файла
            //
@@ -256,7 +253,7 @@ public class  Main {
                                         tS = resStr + bufS;  // учет буфера переноса
                                         resStr = "";
                                     }
-                                    System.out.println(tS);
+                                    lines.add(tS);
                                 } else  // обработка символов
 
                                 if ((i < count-1) && !(buffer[i + 1] == 10 || buffer[i + 1] == 13)) {
@@ -280,9 +277,13 @@ public class  Main {
                     } // while read stream
 
                    // обработка остатка после чтения файла
-                   if (resStr.length() != 0)
-                     System.out.println(resStr);
-                   // todo не забыть остаток
+                   if (resStr.length() != 0) {
+                       lines.add(resStr);
+                   }
+
+                    // обработка текущего буфера строк
+                    WriteFiles(lines);
+
 
                 } // try read stream
                 catch (IOException e) {
@@ -301,79 +302,80 @@ public class  Main {
                 System.out.println("Ошибка открытия потока файла " + fileName + "\n" + e.getMessage());
             }
 
-   /*
-          // чтение исходного файла
-          try {
-              lines =  readSourceFile(fileName);
-          }
-          catch(IOException e) {
-              e.printStackTrace();
-          }
+       } // StreamReadFile
 
 
+      //  Запись в файлы
+      static void WriteFiles(List<String> lines) {
+          // String buffers
+          ByteArrayOutputStream byteLongStream = new ByteArrayOutputStream();
+          ByteArrayOutputStream byteDoubleStream = new ByteArrayOutputStream();
+          ByteArrayOutputStream byteStringStream = new ByteArrayOutputStream();
 
           for ( String s : lines) {
 
-           // buffer  for write file
-           // добавляю перевод строки
-           byte[] cs =   ( s + "\r\n").getBytes();
+              // buffer  for write file
+              // добавляю перевод строки
+              byte[] cs =   ( s + "\r\n").getBytes();
 
-           // Записываю результат в разные файлы изходя из ParseStr(s)
-           switch (ParseStr(s)) {
-             case r_long:
-                 try {
-                     byteLongStream.write(cs);
-                 }
-                 catch (IOException e) {
-                     e.printStackTrace();
-                 }
-                 break;
-               case r_double:
-                 try {
-                     byteDoubleStream.write(cs);
-                 }
-                 catch (IOException e) {
-                     e.printStackTrace();
-                 }
-                 break;
-               case r_string:
-                 try {
-                     byteStringStream.write(cs);
-                 }
-                 catch (IOException e) {
-                     e.printStackTrace();
-                 }
-                 break;
-           }
-         }
-         // запись в файлы
-         // todo реализовать потоковое чтение, что позволит обработать файл любой длины. Deadline...
-         byte[] tmpLong = byteLongStream.toByteArray();
-         byte[] tmpDouble = byteDoubleStream.toByteArray();
-         byte[] tmpString = byteStringStream.toByteArray();
-         String mes = ". \n Вероятно вы указали параметр -o c некоректной директорией. ";
+              // Записываю результат в разные файлы изходя из ParseStr(s)
+              switch (CheckTypeString(s)) {
+                  case r_long:
+                      try {
+                          byteLongStream.write(cs);
+                      }
+                      catch (IOException e) {
+                          e.printStackTrace();
+                      }
+                      break;
+                  case r_double:
+                      try {
+                          byteDoubleStream.write(cs);
+                      }
+                      catch (IOException e) {
+                          e.printStackTrace();
+                      }
+                      break;
+                  case r_string:
+                      try {
+                          byteStringStream.write(cs);
+                      }
+                      catch (IOException e) {
+                          e.printStackTrace();
+                      }
+                      break;
+              }
+          }
+          // запись в файлы
 
-         // запись в целевые файлы
-         try{
-           Files.write(filePathLong, tmpLong, StandardOpenOption.APPEND);
-         }
-         catch (IOException e) {
-           System.err.println(" Не могу записать в файл " + filePathLong + mes +"\n");
-         }
-         try{
-           Files.write(filePathDouble, tmpDouble, StandardOpenOption.APPEND);
-         }
-         catch (IOException e) {
-           System.err.println(" Не могу записать в файл " + filePathDouble + mes+ "\n");
-         }
-           try{
-               Files.write(filePathString, tmpString, StandardOpenOption.APPEND);
-           }
-           catch (IOException e) {
-               System.err.println(" Не могу записать в файл " + filePathString + mes + "\n");
-           }
-*/
-       } // WorkFile
+          byte[] tmpLong = byteLongStream.toByteArray();
+          byte[] tmpDouble = byteDoubleStream.toByteArray();
+          byte[] tmpString = byteStringStream.toByteArray();
+          String mes = ". \n Вероятно вы указали параметр -o c некоректной директорией. ";
+
+          // запись в целевые файлы
+          try{
+              Files.write(filePathLong, tmpLong, StandardOpenOption.APPEND);
+          }
+          catch (IOException e) {
+              System.err.println(" Не могу записать в файл " + filePathLong + mes +"\n");
+          }
+          try{
+              Files.write(filePathDouble, tmpDouble, StandardOpenOption.APPEND);
+          }
+          catch (IOException e) {
+              System.err.println(" Не могу записать в файл " + filePathDouble + mes+ "\n");
+          }
+          try{
+              Files.write(filePathString, tmpString, StandardOpenOption.APPEND);
+          }
+          catch (IOException e) {
+              System.err.println(" Не могу записать в файл " + filePathString + mes + "\n");
+          }
+
+      }
+
+
 
        //
        static void Ini() {
@@ -456,11 +458,10 @@ public class  Main {
                     // предыдущий аргумент не параметр?
                     if ((args[i].charAt(0) != '-') )
                         if ((args[i-1].charAt(1) == 'a') || (args[i-1].charAt(1) == 's') || (args[i-1].charAt(1) == 'f'))
-                        Work.StreamReadFile(s);
+                            Work.StreamReadFile(s);
         }
 
         Work.Rep();
-
 
     }
 }
