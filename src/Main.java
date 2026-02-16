@@ -1,4 +1,5 @@
 
+
 /*
   Программа
     Stream Parser
@@ -12,13 +13,11 @@
 
 */
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,7 +69,7 @@ public class  Main {
         static int  maxString = 0;
 
         // размер буфера чтения
-        static int BufSize = 65535;
+        static int ReadStringAmount = 10000;
 
         // определение типа строки
         static short CheckTypeString(String str) {
@@ -203,7 +202,7 @@ public class  Main {
             // десятичный размер буфера потока чтения (умолчание 65535 байт)
             if (param.charAt(1)== 'b') {
                 String tS  = new String(param.substring(2));
-                BufSize =  Integer.parseInt(tS);
+                ReadStringAmount =  Integer.parseInt(tS);
             }
             // путь к целевой директории
             if (param.charAt(1)== 'p') {
@@ -215,100 +214,36 @@ public class  Main {
         static void  StreamReadFile (String fileName) {
 
            List<String> lines = new ArrayList<String>();  // буфер строк
-
-           String resStr = "";  // буфер переноса
-           boolean fCR_LF = false; // флаг CR и LF
+           int count = 1;
+           //String resStr = "";  // буфер переноса
+           //boolean fCR_LF = false; // флаг CR и LF
 
            System.out.println("Обработка файла " + fileName);
 
            // Потоковое чтение файла
-           //
 
-            try {
-                FileInputStream is = new FileInputStream(fileName);
-                byte[] buffer = new byte[BufSize];
-
-                try {
-                    // читать поток в буфер
-                    while (is.available() > 0) {
-
-                        // байт считано
-                        int count = is.read(buffer);
-                        //fRN = false;
-
-                        // System.out.println("Count = " + count );
-
-                        int lastPosString = 0; // последняя позиция найденной строки
-
-                        // parse Strings
-                        for (int i=0; i < count; i++) {
-
-                            if ( buffer[i] == 10 || buffer[i] == 13) { // переводы строк
-
-                                fCR_LF = true;
-
-                                if (i != 0 && !(buffer[i - 1] == 10 || buffer[i - 1] == 13)) {
-                                    byte[] byteStr = Arrays.copyOfRange(buffer, lastPosString, i);
-
-                                    String tS;  // текущий результат
-                                    String bufS = new String(byteStr, StandardCharsets.UTF_8); //  UTF8 строка
-
-                                    if (resStr.length() == 0)
-                                        tS = bufS;
-                                    else {
-                                        tS = resStr + bufS;  // учет буфера переноса
-                                        resStr = "";
-                                    }
-                                    lines.add(tS);
-                                } else  // обработка символов
-
-                                if ((i < count-1) && !(buffer[i + 1] == 10 || buffer[i + 1] == 13)) {
-                                    fCR_LF = false;
-                                    lastPosString = i+1;
-                                }
-
-                            } //
-
-                        }  // for buf
-
-                       // Обработка недопарсеного буфера
-                       if ((lastPosString != count) && (fCR_LF == false)) {
-                           byte[] byteRest =  Arrays.copyOfRange(buffer, lastPosString, count);
-                           // если строка большая, а в буфер не влезло - это нужно обработать
-                           String tS = new String(byteRest, StandardCharsets.UTF_8) ;
-                           String tS2 = resStr + tS;
-                           resStr = resStr + tS2;
-                       }
-
-                    } // while read stream
-
-                   // обработка остатка после чтения файла
-                   if (resStr.length() != 0) {
-                       lines.add(resStr);
-                   }
-
-                    // обработка текущего буфера строк
-                    WriteFiles(lines);
-
-
-                } // try read stream
-                catch (IOException e) {
-                    System.out.println("Ошибка  чтения потока файла " + fileName );
+            try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+                String line;
+                int numLine = 0;
+                while ((line = br.readLine()) != null) {
+                    numLine ++;
+                    //  добавить строку в список
+                    lines.add(line);
+                    // обработка буфера строк
+                    if ((numLine % ReadStringAmount) == 0){
+                        // обработка текущего буфера строк
+                        WriteFiles(lines);
+                    }
                 }
-
-                try {
-                    is.close();
-                }
-                catch (IOException e) {
-                    System.out.println("Ошибка  закрыти потока файла " + fileName );
-                }
-
-            } catch (IOException e) {
-                // The catch block handles the specific exception
-                System.out.println("Ошибка открытия потока файла " + fileName + "\n" + e.getMessage());
+            } catch (Exception e) {
+                System.err.println("Ошибка при чтении файла " + fileName);
+                // throw new RuntimeException(e);
+            }
+            finally {
+                WriteFiles(lines);
             }
 
-       } // StreamReadFile
+        }  // StreamReadFile
 
 
       //  Запись в файлы
