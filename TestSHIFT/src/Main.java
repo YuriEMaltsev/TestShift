@@ -1,16 +1,26 @@
+
+
 /*
- 
+  Программа
+    Stream Parser
+  Назначение
+    Программа выборки из исходных файлов строк со строками,
+    содержащие Long и Double
+  Автор
+    Юрий Мальцев
+  Дата релиза
+    11.02.2026
+
 */
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.io.ByteArrayOutputStream;
-//import java.nio.charset.StandardCharsets;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class  Main {
@@ -43,7 +53,6 @@ public class  Main {
         // полный формат отчета
         static boolean fFullRep = false;
 
-        static int countAll = 0;
         static int countLong = 0;
         static int countDouble = 0;
         static int countString;
@@ -59,23 +68,11 @@ public class  Main {
         static int  minString = 2147483647;
         static int  maxString = 0;
 
+        // размер буфера чтения
+        static int ReadStringAmount = 10000;
 
-          public static List<String> readSourceFile(String filename) throws IOException {
-
-          Path filePath = Paths.get(filename);
-          List<String> lines = new ArrayList<String>();
-          try {
-              lines = Files.readAllLines(filePath);
-          } catch (IOException e) {
-              // Handle I/O errors, such as file not found, permission issues, etc.
-              System.err.println("Ошибка при работе с исходым файлом: " + filename +
-                      "подробная информация" + e.getMessage());
-          }
-          return lines;
-        } //readSourceFile
-
-        // разбор строки
-        static short ParseStr(String str) {
+        // определение типа строки
+        static short CheckTypeString(String str) {
 
             // пробую Long
             try {
@@ -189,7 +186,7 @@ public class  Main {
 
         static void Param(String param) {
 
-              //  целевая директория
+              //  целевая директория (умолчание текущая директория)
               if (param.charAt(1)== 'o') {
                   destDirectory  = new String(param.substring(2));
               }
@@ -198,103 +195,128 @@ public class  Main {
               if (param.charAt(1)== 'a')
                 fAppendDescFile = false;
 
-            // дописывать в существующие файлы
+            // полный формат отчета
             if (param.charAt(1)== 'f')
                 fFullRep = true;
 
+            // десятичный размер буфера потока чтения (умолчание 65535 байт)
+            if (param.charAt(1)== 'b') {
+                String tS  = new String(param.substring(2));
+                ReadStringAmount =  Integer.parseInt(tS);
+            }
+            // путь к целевой директории
             if (param.charAt(1)== 'p') {
                 filePrefix  = new String(param.substring(2) + "_");
             }
 
         } // Param
 
-        static void  WorkFile (String fileName) {
+        static void  StreamReadFile (String fileName) {
 
            List<String> lines = new ArrayList<String>();  // буфер строк
+           int count = 1;
+           //String resStr = "";  // буфер переноса
+           //boolean fCR_LF = false; // флаг CR и LF
 
            System.out.println("Обработка файла " + fileName);
 
-           try {
-               lines =  readSourceFile(fileName);
-           }
-           catch(IOException e) {
-               System.err.println(" Не могу прочитать исходный файл" + fileName + "\n");
-               e.printStackTrace();
-           }
+           // Потоковое чтение файла
 
+            try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+                String line;
+                int numLine = 0;
+                while ((line = br.readLine()) != null) {
+                    numLine ++;
+                    //  добавить строку в список
+                    lines.add(line);
+                    // обработка буфера строк
+                    if ((numLine % ReadStringAmount) == 0){
+                        // обработка текущего буфера строк
+                        WriteFiles(lines);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Ошибка при чтении файла " + fileName);
+                // throw new RuntimeException(e);
+            }
+            finally {
+                WriteFiles(lines);
+            }
+
+        }  // StreamReadFile
+
+
+      //  Запись в файлы
+      static void WriteFiles(List<String> lines) {
           // String buffers
           ByteArrayOutputStream byteLongStream = new ByteArrayOutputStream();
           ByteArrayOutputStream byteDoubleStream = new ByteArrayOutputStream();
           ByteArrayOutputStream byteStringStream = new ByteArrayOutputStream();
 
-          // чтение исходного файла
-          try {
-              lines =  readSourceFile(fileName);
-          }
-          catch(IOException e) {
-              e.printStackTrace();
-          }
-
           for ( String s : lines) {
-           // buffer  for write file
-           byte[] cs =   ( s + "\r\n").getBytes();
 
-           // Write content to file
-           switch (ParseStr(s)) {
-             case r_long:
-                 try {
-                     byteLongStream.write(cs);
-                 }
-                 catch (IOException e) {
-                     e.printStackTrace();
-                 }
-                 break;
-               case r_double:
-                 try {
-                     byteDoubleStream.write(cs);
-                 }
-                 catch (IOException e) {
-                     e.printStackTrace();
-                 }
-                 break;
-               case r_string:
-                 try {
-                     byteStringStream.write(cs);
-                 }
-                 catch (IOException e) {
-                     e.printStackTrace();
-                 }
-                 break;
-           }
-         }
-         // запись в файлы
-         // todo реализовать потоковое чтение, что позволит обработать файл любой длины. Deadline...
-         byte[] tmpLong = byteLongStream.toByteArray();
-         byte[] tmpDouble = byteDoubleStream.toByteArray();
-         byte[] tmpString = byteStringStream.toByteArray();
-         String mes = ". \n Вероятно вы указали параметр -o c некоректной директорией. ";
+              // buffer  for write file
+              // добавляю перевод строки
+              byte[] cs =   ( s + "\r\n").getBytes();
 
-         // запись в целевые файлы
-         try{
-           Files.write(filePathLong, tmpLong, StandardOpenOption.APPEND);
-         }
-         catch (IOException e) {
-           System.err.println(" Не могу записать в файл " + filePathLong + mes +"\n");
-         }
-         try{
-           Files.write(filePathDouble, tmpDouble, StandardOpenOption.APPEND);
-         }
-         catch (IOException e) {
-           System.err.println(" Не могу записать в файл " + filePathDouble + mes+ "\n");
-         }
-           try{
-               Files.write(filePathString, tmpString, StandardOpenOption.APPEND);
-           }
-           catch (IOException e) {
-               System.err.println(" Не могу записать в файл " + filePathString + mes + "\n");
-           }
+              // Записываю результат в разные файлы изходя из ParseStr(s)
+              switch (CheckTypeString(s)) {
+                  case r_long:
+                      try {
+                          byteLongStream.write(cs);
+                      }
+                      catch (IOException e) {
+                          e.printStackTrace();
+                      }
+                      break;
+                  case r_double:
+                      try {
+                          byteDoubleStream.write(cs);
+                      }
+                      catch (IOException e) {
+                          e.printStackTrace();
+                      }
+                      break;
+                  case r_string:
+                      try {
+                          byteStringStream.write(cs);
+                      }
+                      catch (IOException e) {
+                          e.printStackTrace();
+                      }
+                      break;
+              }
+          }
+          // запись в файлы
 
-       } // WorkFile
+          byte[] tmpLong = byteLongStream.toByteArray();
+          byte[] tmpDouble = byteDoubleStream.toByteArray();
+          byte[] tmpString = byteStringStream.toByteArray();
+          String mes = ". \n Вероятно вы указали параметр -o c некоректной директорией. ";
+
+          // запись в целевые файлы
+          try{
+              Files.write(filePathLong, tmpLong, StandardOpenOption.APPEND);
+          }
+          catch (IOException e) {
+              System.err.println(" Не могу записать в файл " + filePathLong + mes +"\n");
+          }
+          try{
+              Files.write(filePathDouble, tmpDouble, StandardOpenOption.APPEND);
+          }
+          catch (IOException e) {
+              System.err.println(" Не могу записать в файл " + filePathDouble + mes+ "\n");
+          }
+          try{
+              Files.write(filePathString, tmpString, StandardOpenOption.APPEND);
+          }
+          catch (IOException e) {
+              System.err.println(" Не могу записать в файл " + filePathString + mes + "\n");
+          }
+
+      }
+
+
 
        //
        static void Ini() {
@@ -318,16 +340,21 @@ public class  Main {
 
       //  Report work
       static void Rep() {
+
           System.out.println("\n Результат работы: \n");
 
           System.out.println(" Результат: Строк Integer : " + countLong);
           System.out.println(" Результат: Строк Float   : " + countDouble);
           System.out.println(" Результат: Строк String  : " + countString);
 
+          // полный отчет
           if (fFullRep) {
-              System.out.println("\nInteger min = " + minLong + ",max = "+ maxLong + ",avg = " + sumLong/countLong);
-              System.out.println(  "Float min = " + minDouble + ",max = "+ maxDouble + ",avg = " +sumDouble/countDouble);
-              System.out.println(  "String minLen = " + minString + ",max = "+ maxString);
+           if (countLong != 0)
+               System.out.println("\nInteger min = " + minLong + ",max = "+ maxLong + ",avg = " + sumLong/countLong);
+           if (countDouble != 0)
+               System.out.println(  "Float min = " + minDouble + ",max = "+ maxDouble + ",avg = " +sumDouble/countDouble);
+           if (countString !=0 )
+               System.out.println(  "String minLen = " + minString + ",max = "+ maxString);
           }
       }
 
@@ -335,7 +362,7 @@ public class  Main {
 
     public static void main(String[] args) {
 
-        System.out.println("Hello SHIFT!\n");
+        System.out.println("  Stream Parser !\n");
 
         // чтение параметров
         for (int i = 0 ; i < args.length; i++) {
@@ -366,17 +393,19 @@ public class  Main {
         // обработка файлов
         for (int i = 0 ; i < args.length; i++) {
             String s = args[i];
+
             if (s.charAt(0) != '-')
-                if (i == 0)
-                    Work.WorkFile(s);
-                else
-                    // предыдущий аргумент не параметр?
-                    if (args[i-1].charAt(0) != '-')
-                        Work.WorkFile(s);
+                if (i == 0) //
+                    Work.StreamReadFile(s);
+                else {
+                    // пробросить p и o
+                    if (!(((args[i - 1].charAt(1) == 'p') || (args[i - 1].charAt(1) == 'o')) && (args[i - 1].charAt(0) == '-')))
+                        Work.StreamReadFile(s);
+                }
         }
 
+        // Отчет
         Work.Rep();
-
 
     }
 }
